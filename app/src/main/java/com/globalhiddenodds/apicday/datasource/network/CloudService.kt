@@ -24,7 +24,7 @@ interface PicDayCloudService {
     suspend fun searchPicDay(
         @Query("date") date: String,
         @Query("api_key") key: String = "d5lJakXvDaJ5tBUOg9PDohG6FLoQy19qXgAtIczq",
-        ): PicDayCloud
+        ): PicDayCloud?
 }
 
 object GetPicDay {
