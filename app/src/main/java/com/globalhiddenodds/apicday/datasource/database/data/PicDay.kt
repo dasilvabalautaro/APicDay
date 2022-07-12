@@ -3,6 +3,7 @@ package com.globalhiddenodds.apicday.datasource.database.data
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.globalhiddenodds.apicday.ui.data.PicDayView
 
 @Entity(tableName = "picday")
 data class PicDay(
@@ -15,4 +16,8 @@ data class PicDay(
     @ColumnInfo(name = "title") val title: String,
     @ColumnInfo(name = "url") val url: String,
     @ColumnInfo(name = "base64") val base64: String
+)
+
+fun PicDay.toPicDayView(): PicDayView = PicDayView(
+    id, date, explanation, hdurl, mediaType, serviceVersion,title, url, base64)
 )
