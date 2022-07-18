@@ -2,6 +2,7 @@ package com.globalhiddenodds.apicday.ui.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -14,44 +15,60 @@ import androidx.compose.ui.semantics.semantics
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.work.WorkInfo
 import com.globalhiddenodds.apicday.R
+import com.globalhiddenodds.apicday.ui.activities.MainActivity
 import com.globalhiddenodds.apicday.ui.viewmodels.CrudDatabaseViewModel
 import com.globalhiddenodds.apicday.ui.viewmodels.DownloadPicDayViewModel
 import com.globalhiddenodds.apicday.utils.Utils
 import com.skydoves.landscapist.coil.CoilImage
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @Composable
-fun SplashBody(viewModel: DownloadPicDayViewModel) {
+fun SplashBody() {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .semantics { contentDescription = "Splash Screen" }) {
         LoadImageBackground()
-        DownloadPickDay(viewModel)
     }
 }
 
 @Composable
-fun LoadImageBackground() {
-    CoilImage(
-        imageModel = (R.drawable.background),
-        modifier = Modifier.fillMaxSize(),
-        contentDescription = "background image",
-        contentScale = ContentScale.FillBounds
-    )
+fun LoadImageBackground(viewModel: CrudDatabaseViewModel = hiltViewModel()) {
+    val context = LocalContext.current
+    viewModel.setSearchDate(MainActivity.dateSearch)
+    val list by viewModel.lisPicDay.observeAsState()
+    list?.let {
+        if (it.isNotEmpty()){
+            val pic = it[0]
+            val bitmap = Utils.decodeBase64(pic.base64)
+            CoilImage(
+                imageModel = bitmap,
+                modifier = Modifier.fillMaxWidth(),
+                contentDescription = "background image",
+                contentScale = ContentScale.Crop //ContentScale.FillBounds
+            )
+            Utils.notify(context, stringResource(R.string.lbl_pic_of_day))
+        }
+        else {
+            CoilImage(
+                imageModel = (R.drawable.background),
+                modifier = Modifier.fillMaxWidth(),
+                contentDescription = "background image",
+                contentScale = ContentScale.Crop
+            )
+            Utils.notify(context, stringResource(id = R.string.lbl_down_pic_day))
+            val viewModelDown: DownloadPicDayViewModel = hiltViewModel()
+            DownloadPickDay(viewModelDown)
+        }
+    }
 }
 
 @Composable
-private fun DownloadPickDay(viewModel: DownloadPicDayViewModel) {
+fun DownloadPickDay(viewModel: DownloadPicDayViewModel) {
     val context = LocalContext.current
     if (Utils.isConnect(context)) {
         ObserverWorkInfo(viewModel)
         if (viewModel.status.value == false) {
-            val df = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-            val date = LocalDate.parse("yyyy-MM-dd", df)
-
-            viewModel.downPicDay(date.toString())
+            viewModel.downPicDay(MainActivity.dateSearch)
         }
     } else {
         Utils.notify(context, "Connectivity fail.")

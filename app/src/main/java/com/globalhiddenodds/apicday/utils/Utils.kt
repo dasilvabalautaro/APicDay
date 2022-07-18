@@ -12,11 +12,19 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import java.io.ByteArrayOutputStream
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 object Utils {
     fun notify(context: Context, message: String) {
         val appContext = context.applicationContext ?: return
         Toast.makeText(appContext, message, Toast.LENGTH_LONG).show()
+    }
+
+    fun formatDateNow(): String {
+        val df = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val date = LocalDate.now()
+        return df.format(date)
     }
 
     fun encodeImage(bitmap: Bitmap): String? {

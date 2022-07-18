@@ -8,34 +8,44 @@ import com.globalhiddenodds.apicday.ui.data.PicDayView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class CrudDatabaseViewModel @Inject constructor(
     private val handle: SavedStateHandle,
     private val crudDatabaseUseCase: CrudDatabaseUseCase
-): ViewModel() {
+) : ViewModel() {
     private val taskResultMutableLive = MutableLiveData<String>()
     val taskResult: LiveData<String> = taskResultMutableLive
-    val picDay: LiveData<PicDayView> by lazy {
-        Transformations.map(
-            crudDatabaseUseCase.picDay.distinctUntilChanged()
-        ) {
-            transformPicDay(it)
+
+    val lisPicDay: LiveData<List<PicDayView>> by lazy {
+        crudDatabaseUseCase.lisPicDay!!.switchMap {
+            liveData { emit(transformPicDay(it)) }
         }
     }
-    fun insert(){
+
+    fun insert() {
         viewModelScope.launch {
             val result = crudDatabaseUseCase.insertPicDay()
             taskResultMutableLive.value = "Insert Pic of Day: $result"
         }
     }
 
-    private fun transformPicDay(picDay: PicDay): PicDayView? {
-        val currentPicDay = MutableLiveData<PicDayView>()
-        viewModelScope.launch(Dispatchers.IO) {
-            currentPicDay.value = picDay.toPicDayView()
+    private suspend fun transformPicDay(list: List<PicDay>):
+            List<PicDayView> {
+        val listPic = withContext(
+            viewModelScope
+                .coroutineContext + Dispatchers.IO
+        ) {
+            val listPicDayView = mutableListOf<PicDayView>()
+            list.map { listPicDayView.add(it.toPicDayView()) }
+            return@withContext listPicDayView
         }
-        return currentPicDay.value
+        return listPic
+    }
+
+    fun setSearchDate(date: String) {
+        crudDatabaseUseCase.setDate(date)
     }
 }
