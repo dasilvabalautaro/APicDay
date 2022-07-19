@@ -7,25 +7,33 @@ import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 
 private val DarkColorPalette = darkColors(
-    primary = Purple200,
-    primaryVariant = Purple700,
-    secondary = Teal200
+    primary = Blue500,
+    primaryVariant = Blue700,
+    secondary = Green200,
+    secondaryVariant = Green900,
+    error = Error,
+    background = Background,
+    surface = SurfaceNight,
+    onPrimary = OnPrimaryNight,
+    onSecondary = OnSecondary,
+    onBackground = OnBackgroundNight,
+    onSurface = OnSurfaceNight,
 )
 
 private val LightColorPalette = lightColors(
-    primary = Purple500,
-    primaryVariant = Purple700,
-    secondary = Teal200
+    primary = Blue200,
+    primaryVariant = Blue700,
+    secondary = Green200,
+    secondaryVariant = Green200,
+    error = Error,
+    background = OnBackgroundDay,
+    surface = SurfaceDay,
+    onPrimary = OnPrimaryDay,
+    onSecondary = OnSecondary,
+    onBackground = OnBackgroundDay,
+    onSurface = OnSurfaceDay,
 
-    /* Other default colors to override
-    background = Color.White,
-    surface = Color.White,
-    onPrimary = Color.White,
-    onSecondary = Color.Black,
-    onBackground = Color.Black,
-    onSurface = Color.Black,
-    */
-)
+    )
 
 @Composable
 fun APicDayTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {

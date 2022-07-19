@@ -1,5 +1,6 @@
 package com.globalhiddenodds.apicday.repository
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -13,7 +14,7 @@ interface PicDayDao {
     suspend fun insert(picday: PicDay)
 
     @Query("SELECT * FROM picday WHERE date LIKE :date")
-    fun getPicDay(date: String): Flow<PicDay>
+    fun getPicDay(date: String): Flow<List<PicDay>>
 
     @Query("DELETE FROM picday")
     suspend fun delete()

@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,21 +17,44 @@ import com.globalhiddenodds.apicday.ui.configuration.AppScreens
 import com.globalhiddenodds.apicday.ui.screens.PicDayBody
 import com.globalhiddenodds.apicday.ui.screens.SplashBody
 import com.globalhiddenodds.apicday.ui.theme.APicDayTheme
-import com.globalhiddenodds.apicday.ui.viewmodels.DownloadPicDayViewModel
+import com.globalhiddenodds.apicday.utils.Utils
+import dagger.hilt.android.AndroidEntryPoint
 import kotlin.system.exitProcess
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
+            changeDate(Utils.formatDateNow())
             PicDayApp()
+            //localTranslator.current
+            //CompositionLocalProvider(localTranslator)
+        }
+    }
+
+//    @Composable
+//    private fun CompositionLocalProvider(localTranslator: ProvidableCompositionLocal<Translator>) {
+//        localTranslator.current.translate()
+//        PicDayApp()
+//    }
+
+    companion object {
+        //        val localTranslator: ProvidableCompositionLocal<Translator> =
+//            staticCompositionLocalOf<Translator> {
+//                error("CompositionLocal translator not present")
+//            }
+        var dateSearch: String = ""
+        fun changeDate(date: String) {
+            dateSearch = date
         }
     }
 }
 
 @Composable
-fun PicDayApp(viewModel: DownloadPicDayViewModel = hiltViewModel()) {
-    APicDayTheme {
+fun PicDayApp() {
+    APicDayTheme(true) {
         val allScreens = AppScreens.values().toList()
         val navController = rememberNavController()
         val backstackEntry = navController.currentBackStackEntryAsState()
@@ -50,7 +71,7 @@ fun PicDayApp(viewModel: DownloadPicDayViewModel = hiltViewModel()) {
         }) {
             AppNavHost(
                 navController = navController,
-                modifier = Modifier.padding(it), viewModel
+                modifier = Modifier.padding(it)
             )
         }
     }
@@ -59,8 +80,7 @@ fun PicDayApp(viewModel: DownloadPicDayViewModel = hiltViewModel()) {
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    modifier: Modifier = Modifier,
-    viewModel: DownloadPicDayViewModel
+    modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
@@ -68,7 +88,7 @@ fun AppNavHost(
         modifier = modifier
     ) {
         composable(AppScreens.Splash.name) {
-            SplashBody(viewModel = viewModel)
+            SplashBody()
         }
         composable(AppScreens.PicDay.name) {
             PicDayBody()
@@ -77,13 +97,5 @@ fun AppNavHost(
             android.os.Process.SIGNAL_KILL
             exitProcess(1)
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    APicDayTheme {
-        //Greeting("Android")
     }
 }

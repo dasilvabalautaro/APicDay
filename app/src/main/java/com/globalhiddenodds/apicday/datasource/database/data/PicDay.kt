@@ -20,4 +20,3 @@ data class PicDay(
 
 fun PicDay.toPicDayView(): PicDayView = PicDayView(
     id, date, explanation, hdurl, mediaType, serviceVersion,title, url, base64)
-)

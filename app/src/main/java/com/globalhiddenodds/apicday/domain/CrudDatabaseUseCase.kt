@@ -6,6 +6,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.distinctUntilChanged
 import com.globalhiddenodds.apicday.datasource.database.data.PicDay
 import com.globalhiddenodds.apicday.repository.PicDayDao
+import com.globalhiddenodds.apicday.ui.activities.MainActivity.Companion.dateSearch
 import com.globalhiddenodds.apicday.workers.DownloadPicDayWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,22 +15,25 @@ import javax.inject.Inject
 class CrudDatabaseUseCase @Inject constructor(
     private val picDayDao: PicDayDao
 ) {
-    private val picDayMutableLive = MutableLiveData<PicDay>()
-    val picDay: LiveData<PicDay> by lazy {
-        picDayMutableLive.distinctUntilChanged()
+    private val picDayMutableLive = MutableLiveData<List<PicDay>>()
+    var lisPicDay: LiveData<List<PicDay>>? = null
+
+    //val lisPicDay: LiveData<List<PicDay>> = picDayMutableLive.distinctUntilChanged()
+
+    fun setDate(date: String) {
+        lisPicDay = picDayDao
+            .getPicDay(date).asLiveData()
     }
 
-    fun getPicDay(date: String) {
-        picDayMutableLive.value = picDayDao
-            .getPicDay(date).asLiveData().value
-    }
-
-    suspend fun insertPicDay(): Result<Boolean>{
+    suspend fun insertPicDay(): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             val pic = DownloadPicDayWorker.picDayCloud
-            picDayDao.insert(pic.toPicDay())
-
-            return@withContext Result.success(true)
+            if (pic != null) {
+                picDayDao.insert(pic.toPicDay())
+                return@withContext Result.success(true)
+            } else {
+                return@withContext Result.failure(Throwable("Pic Day null"))
+            }
         }
     }
 

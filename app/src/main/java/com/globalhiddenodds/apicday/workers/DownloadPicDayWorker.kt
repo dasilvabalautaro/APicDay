@@ -43,7 +43,7 @@ class DownloadPicDayWorker @Inject constructor(
     }
 
     companion object {
-        lateinit var picDayCloud: PicDayCloud
+        var picDayCloud: PicDayCloud? = null
     }
 
 }

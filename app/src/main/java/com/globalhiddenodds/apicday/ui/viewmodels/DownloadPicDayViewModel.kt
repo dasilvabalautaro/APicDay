@@ -24,8 +24,10 @@ class DownloadPicDayViewModel @Inject constructor(
     }
     fun downPicDay(date: String){
         viewModelScope. launch {
-            downloadPicOfDayUseCase.downPicOfDay(date)
-            handle[viewStatus] = true
+            if (!handle.getLiveData<Boolean>(viewStatus).value!!) {
+                downloadPicOfDayUseCase.downPicOfDay(date)
+                handle[viewStatus] = true
+            }
         }
     }
 }

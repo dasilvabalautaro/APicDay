@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.globalhiddenodds.apicday.ui.configuration.AppScreens
+import com.globalhiddenodds.apicday.ui.theme.OnBackgroundNight
 import java.util.*
 
 @Composable
@@ -86,7 +87,7 @@ private fun AppTab(
                 indication = rememberRipple(
                     bounded = false,
                     radius = Dp.Unspecified,
-                    color = Color.Unspecified
+                    color = OnBackgroundNight
                 )
             )
             .clearAndSetSemantics { contentDescription = text }
