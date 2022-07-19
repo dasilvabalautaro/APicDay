@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -34,6 +36,7 @@ import com.globalhiddenodds.apicday.ui.activities.MainActivity.Companion.dateSea
 import com.globalhiddenodds.apicday.ui.data.PicDayView
 import com.globalhiddenodds.apicday.ui.viewmodels.CrudDatabaseViewModel
 import com.globalhiddenodds.apicday.ui.viewmodels.DownloadPicDayViewModel
+import com.globalhiddenodds.apicday.ui.viewmodels.TranslateViewModel
 import com.globalhiddenodds.apicday.utils.Utils
 import com.skydoves.landscapist.coil.CoilImage
 import java.util.*
@@ -93,10 +96,10 @@ private fun Greet(
 private fun CardContentPic(
     picDay: PicDayView
 ) {
+    val translateLanguage = remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
-
-            .padding(10.dp)
+            .padding(5.dp)
             .fillMaxWidth()
     ) {
         Title(name = picDay.title)
@@ -104,8 +107,27 @@ private fun CardContentPic(
         ImagePost(base64 = picDay.base64)
         CopyRight(name = "Image Credit: NASA")
         BodyText(body = picDay.explanation)
+        if (translateLanguage.value) {
+            Translate(picDay = picDay)
+        }
     }
     ShowCalendar()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 5.dp, vertical = 35.dp),
+        horizontalArrangement = Arrangement.End
+    ) {
+        IconButton(onClick = {
+            translateLanguage.value = !translateLanguage.value
+        }) {
+            Icon(
+                imageVector = if (translateLanguage.value) Icons.Filled.Refresh else Icons.Filled.Translate,
+                contentDescription = "Translate"
+            )
+        }
+    }
+
 }
 
 @Composable
@@ -114,9 +136,8 @@ fun Title(name: String) {
         text = name,
         style = MaterialTheme.typography.subtitle1,
         modifier = Modifier
-            .fillMaxSize()
-            .padding(start = 15.dp, top = 5.dp, end = 35.dp, bottom = 5.dp)
-            .wrapContentWidth(Alignment.CenterHorizontally)
+            .padding(start = 15.dp, top = 5.dp, end = 60.dp, bottom = 5.dp)
+            .wrapContentWidth(Alignment.Start)
     )
 }
 
@@ -166,6 +187,7 @@ fun ImagePost(base64: String) {
     val bitmap = Utils.decodeBase64(base64)
 
     Box(modifier = Modifier
+        .padding(5.dp)
         .clip(RectangleShape)
         .onSizeChanged { size = it }
         .animateContentSize(
@@ -236,7 +258,7 @@ fun ShowCalendar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp),
+            .padding(horizontal = 5.dp, vertical = 5.dp),
         horizontalArrangement = Arrangement.End
     ) {
         IconButton(onClick = {
@@ -251,3 +273,42 @@ fun ShowCalendar() {
 
 }
 
+@Composable
+fun Translate(picDay: PicDayView) {
+    val context = LocalContext.current
+    val viewModel: TranslateViewModel = hiltViewModel()
+    viewModel.sourceLang.value = TranslateViewModel.Language("en")
+    viewModel.targetLang.value = TranslateViewModel.Language("es")
+
+    //
+    val availableLang = viewModel.availableLanguages
+    if (availableLang.isEmpty()) {
+        viewModel.downloadLanguage(viewModel.sourceLang.value!!)
+        viewModel.downloadLanguage(viewModel.targetLang.value!!)
+        val model by viewModel.availableModels.observeAsState()
+        model?.let { list ->
+            list.map { Utils.notify(context, it) }
+        }
+    }
+
+    //
+
+    val dataTranslate = "${picDay.title} * ${picDay.explanation}"
+    viewModel.sourceText.postValue(dataTranslate)
+
+    val translate by viewModel.translatedText.observeAsState()
+    translate?.let {
+        if (it.error != null) {
+            it.error!!.localizedMessage?.let { it1 ->
+                Utils.notify(context, it1)
+            }
+        } else if (it.result!!.isNotEmpty()) {
+            val result = it.result!!
+            val arrResult = result.split("*")
+            picDay.title = arrResult[0]
+            picDay.explanation = arrResult[1]
+        } else {
+            println("EMPTY TRANSLATE")
+        }
+    }
+}

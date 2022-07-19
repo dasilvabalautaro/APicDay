@@ -19,6 +19,7 @@ import com.globalhiddenodds.apicday.ui.screens.SplashBody
 import com.globalhiddenodds.apicday.ui.theme.APicDayTheme
 import com.globalhiddenodds.apicday.utils.Utils
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.*
 import kotlin.system.exitProcess
 
 @AndroidEntryPoint
@@ -29,22 +30,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             changeDate(Utils.formatDateNow())
             PicDayApp()
-            //localTranslator.current
-            //CompositionLocalProvider(localTranslator)
         }
     }
 
-//    @Composable
-//    private fun CompositionLocalProvider(localTranslator: ProvidableCompositionLocal<Translator>) {
-//        localTranslator.current.translate()
-//        PicDayApp()
-//    }
-
     companion object {
-        //        val localTranslator: ProvidableCompositionLocal<Translator> =
-//            staticCompositionLocalOf<Translator> {
-//                error("CompositionLocal translator not present")
-//            }
         var dateSearch: String = ""
         fun changeDate(date: String) {
             dateSearch = date
@@ -54,7 +43,18 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PicDayApp() {
-    APicDayTheme(true) {
+    var dark = false
+    val date = Date()
+    val calendar = Calendar.getInstance()
+    calendar.time = date
+    dark = when(calendar.get(Calendar.HOUR_OF_DAY)) {
+        in 0..6 -> true
+        in 7..17 -> false
+        in 18..23 -> true
+        else -> true
+    }
+
+    APicDayTheme(dark) {
         val allScreens = AppScreens.values().toList()
         val navController = rememberNavController()
         val backstackEntry = navController.currentBackStackEntryAsState()

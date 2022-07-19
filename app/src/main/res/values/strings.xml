@@ -5,4 +5,5 @@
     <string name="lbl_down_failed">Download Picture Failed</string>
     <string name="lbl_down_finished">Task Download Finished</string>
     <string name="lbl_pic_of_day">Picture of Day</string>
+    <string name="lbl_unknown_error">Unknown error</string>
 </resources>

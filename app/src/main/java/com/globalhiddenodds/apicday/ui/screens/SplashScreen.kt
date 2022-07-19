@@ -1,5 +1,6 @@
 package com.globalhiddenodds.apicday.ui.screens
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,39 +17,45 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.work.WorkInfo
 import com.globalhiddenodds.apicday.R
 import com.globalhiddenodds.apicday.ui.activities.MainActivity
+import com.globalhiddenodds.apicday.ui.components.CircularIndeterminateProgressBar
 import com.globalhiddenodds.apicday.ui.viewmodels.CrudDatabaseViewModel
 import com.globalhiddenodds.apicday.ui.viewmodels.DownloadPicDayViewModel
 import com.globalhiddenodds.apicday.utils.Utils
 import com.skydoves.landscapist.coil.CoilImage
 
 @Composable
-fun SplashBody() {
+fun SplashBody(viewModel: CrudDatabaseViewModel = hiltViewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .semantics { contentDescription = "Splash Screen" }) {
-        LoadImageBackground()
+        Box(modifier = Modifier.fillMaxSize()) {
+            LoadImageBackground(viewModel)
+
+        }
     }
 }
 
 @Composable
-fun LoadImageBackground(viewModel: CrudDatabaseViewModel = hiltViewModel()) {
+fun LoadImageBackground(viewModel: CrudDatabaseViewModel) {
     val context = LocalContext.current
     viewModel.setSearchDate(MainActivity.dateSearch)
+    val loading = viewModel.loading.value
+    CircularIndeterminateProgressBar(isDisplayed = loading)
     val list by viewModel.lisPicDay.observeAsState()
     list?.let {
-        if (it.isNotEmpty()){
+        if (it.isNotEmpty()) {
             val pic = it[0]
             val bitmap = Utils.decodeBase64(pic.base64)
             CoilImage(
                 imageModel = bitmap,
                 modifier = Modifier.fillMaxWidth(),
                 contentDescription = "background image",
-                contentScale = ContentScale.Crop //ContentScale.FillBounds
+                contentScale = ContentScale.Crop
             )
+            CircularIndeterminateProgressBar(isDisplayed = false)
             Utils.notify(context, stringResource(R.string.lbl_pic_of_day))
-        }
-        else {
+        } else {
             CoilImage(
                 imageModel = (R.drawable.background),
                 modifier = Modifier.fillMaxWidth(),
@@ -60,6 +67,7 @@ fun LoadImageBackground(viewModel: CrudDatabaseViewModel = hiltViewModel()) {
             DownloadPickDay(viewModelDown)
         }
     }
+
 }
 
 @Composable

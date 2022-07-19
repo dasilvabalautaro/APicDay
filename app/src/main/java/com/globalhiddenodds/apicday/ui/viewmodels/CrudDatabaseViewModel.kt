@@ -1,5 +1,6 @@
 package com.globalhiddenodds.apicday.ui.viewmodels
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
 import com.globalhiddenodds.apicday.datasource.database.data.PicDay
 import com.globalhiddenodds.apicday.datasource.database.data.toPicDayView
@@ -18,6 +19,7 @@ class CrudDatabaseViewModel @Inject constructor(
 ) : ViewModel() {
     private val taskResultMutableLive = MutableLiveData<String>()
     val taskResult: LiveData<String> = taskResultMutableLive
+    val loading = mutableStateOf(false)
 
     val lisPicDay: LiveData<List<PicDayView>> by lazy {
         crudDatabaseUseCase.lisPicDay!!.switchMap {
@@ -42,10 +44,12 @@ class CrudDatabaseViewModel @Inject constructor(
             list.map { listPicDayView.add(it.toPicDayView()) }
             return@withContext listPicDayView
         }
+
         return listPic
     }
 
     fun setSearchDate(date: String) {
+        loading.value = true
         crudDatabaseUseCase.setDate(date)
     }
 }
