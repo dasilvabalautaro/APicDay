@@ -8,7 +8,6 @@ import com.globalhiddenodds.apicday.domain.CrudDatabaseUseCase
 import com.globalhiddenodds.apicday.ui.data.PicDayView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -20,17 +19,9 @@ class CrudDatabaseViewModel @Inject constructor(
     private val taskResultMutableLive = MutableLiveData<String>()
     val taskResult: LiveData<String> = taskResultMutableLive
     val loading = mutableStateOf(false)
-
     val lisPicDay: LiveData<List<PicDayView>> by lazy {
         crudDatabaseUseCase.lisPicDay!!.switchMap {
             liveData { emit(transformPicDay(it)) }
-        }
-    }
-
-    fun insert() {
-        viewModelScope.launch {
-            val result = crudDatabaseUseCase.insertPicDay()
-            taskResultMutableLive.value = "Insert Pic of Day: $result"
         }
     }
 
@@ -48,8 +39,10 @@ class CrudDatabaseViewModel @Inject constructor(
         return listPic
     }
 
-    fun setSearchDate(date: String) {
-        loading.value = true
-        crudDatabaseUseCase.setDate(date)
+    fun setSearchDate(date: String?) {
+        if (!date.isNullOrEmpty()) {
+            loading.value = true
+            crudDatabaseUseCase.setDate(date)
+        }
     }
 }

@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">Astronomy Picture of the Day</string>
     <string name="lbl_transform_to_64">Transform URL</string>
-    <string name="lbl_down_pic_day">Download Picture Day</string>
+    <string name="lbl_down_pic_day">Progress Download Picture Day</string>
     <string name="lbl_down_failed">Download Picture Failed</string>
     <string name="lbl_down_finished">Task Download Finished</string>
     <string name="lbl_pic_of_day">Picture of Day</string>
     <string name="lbl_unknown_error">Unknown error</string>
+    <string name="lbl_video_download">Video downloaded</string>
 </resources>

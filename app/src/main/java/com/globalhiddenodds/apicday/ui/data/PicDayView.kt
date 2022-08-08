@@ -7,7 +7,8 @@ data class PicDayView(
     val hdurl: String,
     val media_type: String,
     val service_version: String,
-    val url: String,
     var title: String = "",
+    val copyright: String = "",
+    val url: String,
     var base64: String = ""
 )

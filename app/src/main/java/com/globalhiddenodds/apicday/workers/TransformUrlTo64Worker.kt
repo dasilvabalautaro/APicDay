@@ -23,22 +23,30 @@ class TransformUrlTo64Worker @Inject constructor(
 
         return withContext(Dispatchers.IO) {
             return@withContext try {
-                var isSuccess = inputData.getBoolean(KEY_IS_SUCCESS, false)
-                if (isSuccess && picDayCloud != null){
-                    val url = picDayCloud!!.url
-                    val base64 = Utils.urlToBase64(applicationContext, url)
-                    if (base64 != null){
-                        picDayCloud!!.base64 = base64
+                val isSuccess = inputData.getBoolean(KEY_IS_SUCCESS, false)
+                if (isSuccess && picDayCloud.url.isNotEmpty()){
+                    if (picDayCloud.media_type == "image"){
+                        val url = picDayCloud.url
+                        val base64 = Utils.urlToBase64(applicationContext, url)
+                        if (base64 != null){
+                            picDayCloud.base64 = base64
+                            val outputData: Data = workDataOf(KEY_IS_SUCCESS to isSuccess)
+                            Result.success(outputData)
+                        }
+                        else {
+                            Result.failure()
+                        }
                     }
                     else {
-                        isSuccess = false
+                        val outputData: Data = workDataOf(KEY_IS_SUCCESS to isSuccess)
+                        Result.success(outputData)
                     }
+
                 }
                 else {
-                    isSuccess = false
+                    Result.failure()
                 }
-                val outputData: Data = workDataOf(KEY_IS_SUCCESS to isSuccess)
-                Result.success(outputData)
+
             }catch (throwable: Throwable) {
                 Result.failure()
             }

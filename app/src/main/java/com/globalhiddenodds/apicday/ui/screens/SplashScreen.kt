@@ -1,18 +1,19 @@
 package com.globalhiddenodds.apicday.ui.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import android.graphics.Bitmap
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.work.WorkInfo
 import com.globalhiddenodds.apicday.R
@@ -38,45 +39,85 @@ fun SplashBody(viewModel: CrudDatabaseViewModel = hiltViewModel()) {
 
 @Composable
 fun LoadImageBackground(viewModel: CrudDatabaseViewModel) {
-    val context = LocalContext.current
-    viewModel.setSearchDate(MainActivity.dateSearch)
-    val loading = viewModel.loading.value
-    CircularIndeterminateProgressBar(isDisplayed = loading)
+    var option = 2
+    var bitmap: Bitmap? = null
+    val lblMessage = remember {
+        mutableStateOf(value = "")
+    }
+    viewModel.setSearchDate(MainActivity.dateSearch) //Utils.formatDateNow()
     val list by viewModel.lisPicDay.observeAsState()
     list?.let {
         if (it.isNotEmpty()) {
+            MainActivity.availableOptionPicDay = true
             val pic = it[0]
-            val bitmap = Utils.decodeBase64(pic.base64)
-            CoilImage(
-                imageModel = bitmap,
-                modifier = Modifier.fillMaxWidth(),
-                contentDescription = "background image",
-                contentScale = ContentScale.Crop
-            )
-            CircularIndeterminateProgressBar(isDisplayed = false)
-            Utils.notify(context, stringResource(R.string.lbl_pic_of_day))
+            if (pic.media_type == "image") {
+                bitmap = Utils.decodeBase64(pic.base64)
+                option = 1
+            } else {
+                option = 3
+            }
         } else {
-            CoilImage(
-                imageModel = (R.drawable.background),
-                modifier = Modifier.fillMaxWidth(),
-                contentDescription = "background image",
-                contentScale = ContentScale.Crop
-            )
-            Utils.notify(context, stringResource(id = R.string.lbl_down_pic_day))
             val viewModelDown: DownloadPicDayViewModel = hiltViewModel()
-            DownloadPickDay(viewModelDown)
+            DownloadPickDay(viewModelDown, lblMessage)
         }
+        when (option) {
+            1 -> lblMessage.value = stringResource(R.string.lbl_pic_of_day)
+            2 -> lblMessage.value = stringResource(id = R.string.lbl_down_pic_day)
+            3 -> lblMessage.value = stringResource(id = R.string.lbl_video_download)
+        }
+        Column(modifier = Modifier.fillMaxSize()) {
+            ImageBackground(option, bitmap)
+        }
+        Label(lblMessage)
     }
+}
+
+@Composable
+fun Label(lblMessage: MutableState<String>) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .wrapContentHeight(Alignment.CenterVertically)
+    ) {
+        Text(
+            text = lblMessage.value,
+            style = MaterialTheme.typography.h6
+        )
+    }
+}
+
+@Composable
+private fun ImageBackground(
+    option: Int,
+    bitmap: Bitmap?
+) {
+    var model: Any? = null
+    when (option) {
+        1 -> model = bitmap!!
+        2 -> model = (R.drawable.background)
+        3 -> model = (R.drawable.background)
+    }
+    CoilImage(
+        imageModel = model,
+        modifier = Modifier.fillMaxWidth(),
+        contentDescription = "background image",
+        contentScale = ContentScale.Crop
+    )
 
 }
 
 @Composable
-fun DownloadPickDay(viewModel: DownloadPicDayViewModel) {
+fun DownloadPickDay(
+    viewModel: DownloadPicDayViewModel,
+    lblMessage: MutableState<String> = mutableStateOf("")
+) {
     val context = LocalContext.current
     if (Utils.isConnect(context)) {
-        ObserverWorkInfo(viewModel)
         if (viewModel.status.value == false) {
             viewModel.downPicDay(MainActivity.dateSearch)
+            ObserverWorkInfo(viewModel, lblMessage)
         }
     } else {
         Utils.notify(context, "Connectivity fail.")
@@ -84,30 +125,36 @@ fun DownloadPickDay(viewModel: DownloadPicDayViewModel) {
 }
 
 @Composable
-private fun ObserverWorkInfo(downloadPicDay: DownloadPicDayViewModel) {
+private fun ObserverWorkInfo(
+    downloadPicDay: DownloadPicDayViewModel,
+    lblMessage: MutableState<String>
+) {
     val context = LocalContext.current
     val list by downloadPicDay.outputWorkInfo.observeAsState()
     list?.let {
-        if (it.isNotEmpty()) {
-            val workInfo = it[0]
-            when {
-                workInfo.state.isFinished -> {
-                    SavePicDay()
-                }
-                workInfo.state == WorkInfo.State.FAILED -> {
-                    Utils.notify(context, stringResource(R.string.lbl_down_failed))
-                }
+        val size = it.size - 1
+        val workInfo = it[size]
+        when (workInfo.state) {
+            WorkInfo.State.SUCCEEDED -> {
+                CircularIndeterminateProgressBar(isDisplayed = false)
+                SavePicDay(lblMessage)
+            }
+            WorkInfo.State.FAILED -> {
+                CircularIndeterminateProgressBar(isDisplayed = false)
+                Utils.notify(context, stringResource(R.string.lbl_down_failed))
+            }
+            else -> {
+                CircularIndeterminateProgressBar(isDisplayed = true)
             }
         }
+
     }
 }
 
 @Composable
-private fun SavePicDay(viewModel: CrudDatabaseViewModel = hiltViewModel()) {
-    val context = LocalContext.current
-    ObserverCrudTaskResult(viewModel)
-    viewModel.insert()
-    Utils.notify(context, stringResource(R.string.lbl_down_finished))
+private fun SavePicDay(lblMessage: MutableState<String>) {
+    lblMessage.value = stringResource(R.string.lbl_down_finished)
+    MainActivity.availableOptionPicDay = true
 }
 
 @Composable

@@ -27,7 +27,7 @@ object Utils {
         return df.format(date)
     }
 
-    fun encodeImage(bitmap: Bitmap): String? {
+    private fun encodeImage(bitmap: Bitmap): String? {
         val arrayOutput = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, arrayOutput)
         val byteArray = arrayOutput.toByteArray()
@@ -66,4 +66,10 @@ object Utils {
         return encodeImage(bitmap)
     }
 
+    fun dpToPx(context: Context, dp: Float): Float {
+        val resources = context.resources
+        val scale = resources.displayMetrics.scaledDensity
+        return (dp * scale)
+
+    }
 }

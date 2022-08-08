@@ -1,6 +1,9 @@
 package com.globalhiddenodds.apicday.ui.screens
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.webkit.WebSettings
+import android.webkit.WebView
 import android.widget.DatePicker
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -24,15 +27,16 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.globalhiddenodds.apicday.R
 import com.globalhiddenodds.apicday.ui.activities.MainActivity
-import com.globalhiddenodds.apicday.ui.activities.MainActivity.Companion.dateSearch
 import com.globalhiddenodds.apicday.ui.data.PicDayView
 import com.globalhiddenodds.apicday.ui.viewmodels.CrudDatabaseViewModel
 import com.globalhiddenodds.apicday.ui.viewmodels.DownloadPicDayViewModel
@@ -42,9 +46,10 @@ import com.skydoves.landscapist.coil.CoilImage
 import java.util.*
 import kotlin.math.roundToInt
 
+
 @Composable
 fun PicDayBody(viewModel: CrudDatabaseViewModel = hiltViewModel()) {
-    val dateSearch = dateSearch
+    val dateSearch = MainActivity.dateSearch
     SearchPicDay(
         viewModel = viewModel, date = dateSearch
     )
@@ -54,16 +59,14 @@ fun PicDayBody(viewModel: CrudDatabaseViewModel = hiltViewModel()) {
 fun SearchPicDay(
     viewModel: CrudDatabaseViewModel, date: String
 ) {
-    val context = LocalContext.current
     viewModel.setSearchDate(date)
     val list by viewModel.lisPicDay.observeAsState()
     list?.let {
         if (it.isNotEmpty()) {
-            Utils.notify(context, "Image downloaded")
             DrawScreen(picDays = it)
         } else {
-            Utils.notify(context, "Image for download")
             val viewModelDown: DownloadPicDayViewModel = hiltViewModel()
+            MainActivity.availableOptionPicDay = false
             DownloadPickDay(viewModelDown)
         }
     }
@@ -104,7 +107,11 @@ private fun CardContentPic(
     ) {
         Title(name = picDay.title)
         SubTitle(name = picDay.date)
-        ImagePost(base64 = picDay.base64)
+        if (picDay.media_type == "image") {
+            ImagePost(base64 = picDay.base64)
+        } else {
+            VideoPlayer(videoUrl = picDay.url) //"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        }
         CopyRight(name = "Image Credit: NASA")
         BodyText(body = picDay.explanation)
         if (translateLanguage.value) {
@@ -229,21 +236,23 @@ fun ImagePost(base64: String) {
 @Suppress("NAME_SHADOWING")
 @Composable
 fun ShowCalendar() {
-    val year: Int
-    val month: Int
-    val day: Int
+    val context = LocalContext.current
+    val cYear: Int
+    val cMonth: Int
+    val cDay: Int
     var monthStr: String
     var dayStr: String
 
-    val context = LocalContext.current
     val calendar = Calendar.getInstance()
-    year = calendar.get(Calendar.YEAR)
-    month = calendar.get(Calendar.MONTH)
-    day = calendar.get(Calendar.DAY_OF_MONTH)
+    val maxDate = calendar.timeInMillis
+    cYear = calendar.get(Calendar.YEAR)
+    cMonth = calendar.get(Calendar.MONTH)
+    cDay = calendar.get(Calendar.DAY_OF_MONTH)
     calendar.time = Date()
     val date = remember {
         mutableStateOf(value = "")
     }
+
     val datePickerDialog = DatePickerDialog(
         context,
         { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
@@ -252,8 +261,8 @@ fun ShowCalendar() {
             monthStr = if (m < 10) "0$m" else "$m"
             date.value = "$year-$monthStr-$dayStr"
             MainActivity.changeDate(date.value)
-            Utils.notify(context, "Click PicOfDay $dateSearch")
-        }, year, month, day
+            Utils.notify(context, "Click PicOfDay ${MainActivity.dateSearch}")
+        }, cYear, cMonth, cDay
     )
     Row(
         modifier = Modifier
@@ -262,6 +271,7 @@ fun ShowCalendar() {
         horizontalArrangement = Arrangement.End
     ) {
         IconButton(onClick = {
+            datePickerDialog.datePicker.maxDate = maxDate
             datePickerDialog.show()
         }) {
             Icon(
@@ -291,10 +301,8 @@ fun Translate(picDay: PicDayView) {
         }
     }
 
-    //
-
     val dataTranslate = "${picDay.title} * ${picDay.explanation}"
-    viewModel.sourceText.postValue(dataTranslate)
+    viewModel.sourceText.value = dataTranslate
 
     val translate by viewModel.translatedText.observeAsState()
     translate?.let {
@@ -312,3 +320,133 @@ fun Translate(picDay: PicDayView) {
         }
     }
 }
+
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+fun VideoPlayer(videoUrl: String) {
+    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+
+    val widthDp = configuration.screenWidthDp.dp.value
+    val widthPx = Utils.dpToPx(context, widthDp)
+    val heightPx = widthPx * 1.277f
+
+    val dataUrl =
+        "<html style='display:flex; justify-content: center; background-color:CornflowerBlue;'>" +
+                "<body style='margin: 0; padding: 0;'>" +
+                "<iframe width='" + widthPx.toString() + "px' height='" +
+                heightPx.toString() +
+                "px' src='" + videoUrl +
+                "' fullscreen/>" +
+                "</body>" +
+                "</html>"
+    Box(
+        modifier = Modifier
+            .clip(RectangleShape)
+    ) {
+        AndroidView(
+            modifier = Modifier
+                .fillMaxSize(),
+            factory = {
+                WebView(context).apply {
+                    settings.javaScriptEnabled = true
+                    settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
+                    settings.loadWithOverviewMode = true
+                    settings.useWideViewPort = true
+                }
+            },
+            update = {
+                it.loadData(dataUrl, "text/html", "utf-8")
+            }
+        )
+    }
+}
+
+//    val exoPlayer = remember { getVideoPlayer(context, videoUrl)}
+//    DisposableEffect(
+//        AndroidView(
+//            factory = {
+//                PlayerView(context).apply {
+//                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+//                    player = exoPlayer
+//                    layoutParams = FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+//                }
+//            })
+//    ) {
+//        onDispose { exoPlayer.release() }
+//    }
+
+//private fun getVideoPlayer(
+//    context: Context,
+//    videoUrl: String
+//): ExoPlayer {
+//    val currentItem = 0
+//    val playbackPosition = 0L
+//    val trackSelector = DefaultTrackSelector(context).apply {
+//        setParameters(buildUponParameters().setMaxVideoSizeSd())
+//    }
+//
+//    return ExoPlayer.Builder(context)
+//        .setTrackSelector(trackSelector)
+//        .build()
+//        .also {
+//            val customExtractorFactory = ExtractorsFactory {
+//                arrayOf(
+//                    FlvExtractor(),
+//                    MatroskaExtractor(),
+//                    Mp4Extractor(),
+//                    FragmentedMp4Extractor(),
+//                    AdtsExtractor(),
+//                    Mp3Extractor()
+//                )
+//            }
+//            val httpDatasourceFactory:
+//                    HttpDataSource.Factory =
+//                DefaultHttpDataSource.Factory()
+//                    .setAllowCrossProtocolRedirects(true)
+//            val mediaItem = MediaItem.Builder()
+//                .setUri(videoUrl)
+//                .setMimeType(MimeTypes.APPLICATION_SS)
+//                .build()
+//
+//            val internetVideoSource = ProgressiveMediaSource
+//                .Factory(httpDatasourceFactory, customExtractorFactory)
+//                .createMediaSource(mediaItem)
+//            it.addMediaSource(internetVideoSource)
+//            //it.playWhenReady = true
+//            it.seekTo(currentItem, playbackPosition)
+//            it.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+//            it.repeatMode = Player.REPEAT_MODE_ONE
+//            it.prepare()
+//        }
+//}
+
+//private fun getYoutubeVideo(context: Context,
+//                            playList: List<String>): YouTubePlayerView {
+//    val playerView = YouTubePlayerView(context)
+//    var player: YouTubePlayer? = null
+//
+//    val onPlaylistChangeListener = object : YouTubePlayer.PlaylistEventListener {
+//        override fun onPlaylistEnded() {}
+//        override fun onPrevious() {}
+//        override fun onNext() {}
+//    }
+//    val youtubeApiInitializedListener = object : YouTubePlayer.OnInitializedListener {
+//        override fun onInitializationSuccess(p0: YouTubePlayer.Provider?, p1: YouTubePlayer?, p2: Boolean) {
+//            player = p1
+//            player?.setPlaylistEventListener(onPlaylistChangeListener)
+//            player?.loadVideos(playList)
+//        }
+//
+//        override fun onInitializationFailure(
+//            p0: YouTubePlayer.Provider?,
+//            youTubeInitializationResult: YouTubeInitializationResult?) {
+//            val errorMessage = "There was an error initializing the YoutubePlayer ($youTubeInitializationResult)"
+//            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+//        }
+//    }
+//
+//    playerView.initialize(context.getString(R.string.GOOGLE_API_KEY),
+//        youtubeApiInitializedListener)
+//    return playerView
+//}

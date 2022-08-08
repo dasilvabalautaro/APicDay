@@ -3,8 +3,11 @@ package com.globalhiddenodds.apicday.ui.viewmodels
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.LruCache
-import androidx.lifecycle.*
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import com.globalhiddenodds.apicday.R
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
@@ -112,7 +115,7 @@ class TranslateViewModel @Inject constructor(
             .addOnCompleteListener { fetchDownloadedModels() }
     }
 
-    fun translate(): Task<String> {
+    private fun translate(): Task<String> {
         val text = sourceText.value
         val source = sourceLang.value
         val target = targetLang.value
