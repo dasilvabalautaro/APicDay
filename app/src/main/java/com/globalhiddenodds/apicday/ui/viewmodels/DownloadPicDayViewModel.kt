@@ -16,7 +16,7 @@ class DownloadPicDayViewModel @Inject constructor(
     private val downloadPicOfDayUseCase: DownloadPicOfDayUseCase
 ): ViewModel() {
     private val viewStatus = "VIEW_STATUS_DOWN"
-    val outputWorkInfo: LiveData<List<WorkInfo>> = downloadPicOfDayUseCase.workInfo
+    val outputWorkInfo: LiveData<List<WorkInfo>> by lazy {downloadPicOfDayUseCase.workInfo}
     val status: LiveData<Boolean> by lazy { handle.getLiveData(viewStatus) }
 
     init {

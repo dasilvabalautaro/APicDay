@@ -28,13 +28,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            changeDate(Utils.formatDateNow())
+            changeDate(Utils.formatDateNow()) // "2022-07-25"
             PicDayApp()
         }
     }
 
     companion object {
-        var dateSearch: String = ""
+        var availableOptionPicDay = false
+        var dateSearch: String = Utils.formatDateNow()
         fun changeDate(date: String) {
             dateSearch = date
         }
@@ -42,8 +43,8 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun PicDayApp() {
-    var dark = false
+private fun hourOfDay(): Boolean {
+    val dark: Boolean
     val date = Date()
     val calendar = Calendar.getInstance()
     calendar.time = date
@@ -53,8 +54,12 @@ fun PicDayApp() {
         in 18..23 -> true
         else -> true
     }
+    return dark
+}
 
-    APicDayTheme(dark) {
+@Composable
+fun PicDayApp() {
+    APicDayTheme(hourOfDay()) {
         val allScreens = AppScreens.values().toList()
         val navController = rememberNavController()
         val backstackEntry = navController.currentBackStackEntryAsState()
@@ -64,7 +69,9 @@ fun PicDayApp() {
             AppTabRow(
                 allScreens = allScreens,
                 onTabSelected = {
-                    navController.navigate(it.name)
+                    if (MainActivity.availableOptionPicDay) {
+                        navController.navigate(it.name)
+                    }
                 },
                 currentScreen = currentScreen
             )

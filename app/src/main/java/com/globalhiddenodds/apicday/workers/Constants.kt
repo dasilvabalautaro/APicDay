@@ -23,4 +23,5 @@ const val KEY_MEDIA_TYPE = "media_type"
 const val KEY_SERVICE_VERSION = "service_version"
 const val KEY_TITLE = "title"
 const val KEY_URL = "url"
-
+const val KEY_DAO = "dao"
+const val BODY_ANSWER = "https://api.nasa.gov/planetary/apod?api_key=d5lJakXvDaJ5tBUOg9PDohG6FLoQy19qXgAtIczq&date="

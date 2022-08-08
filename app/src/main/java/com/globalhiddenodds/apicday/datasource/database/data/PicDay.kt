@@ -14,9 +14,10 @@ data class PicDay(
     @ColumnInfo(name = "mediaType") val mediaType: String,
     @ColumnInfo(name = "serviceVersion") val serviceVersion: String,
     @ColumnInfo(name = "title") val title: String,
+    @ColumnInfo(name = "copyright") val copyright: String,
     @ColumnInfo(name = "url") val url: String,
     @ColumnInfo(name = "base64") val base64: String
 )
 
 fun PicDay.toPicDayView(): PicDayView = PicDayView(
-    id, date, explanation, hdurl, mediaType, serviceVersion, url, title, base64)
+    id, date, explanation, hdurl, mediaType, serviceVersion, title, copyright, url,  base64)
