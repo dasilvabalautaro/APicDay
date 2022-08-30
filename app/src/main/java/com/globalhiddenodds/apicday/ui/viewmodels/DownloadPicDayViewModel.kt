@@ -1,33 +1,58 @@
 package com.globalhiddenodds.apicday.ui.viewmodels
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkInfo
-import com.globalhiddenodds.apicday.domain.DownloadPicOfDayUseCase
+import com.globalhiddenodds.apicday.datasource.network.GetPicDay
+import com.globalhiddenodds.apicday.datasource.network.data.BodyCloud
+import com.globalhiddenodds.apicday.datasource.network.data.PicDayCloud
+import com.globalhiddenodds.apicday.datasource.network.data.toPicDay
+import com.globalhiddenodds.apicday.repository.PicDayDao
+import com.globalhiddenodds.apicday.workers.BODY_ANSWER
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class DownloadPicDayViewModel @Inject constructor(
-    private val handle: SavedStateHandle,
-    private val downloadPicOfDayUseCase: DownloadPicOfDayUseCase
-): ViewModel() {
-    private val viewStatus = "VIEW_STATUS_DOWN"
-    val outputWorkInfo: LiveData<List<WorkInfo>> by lazy {downloadPicOfDayUseCase.workInfo}
-    val status: LiveData<Boolean> by lazy { handle.getLiveData(viewStatus) }
+    private val picDayDao: PicDayDao
+) : ViewModel() {
+    private val taskResultMutableLive = MutableLiveData<Boolean>()
+    val outputWorkInfo: LiveData<Boolean> = taskResultMutableLive
+    var messageError = ""
 
-    init {
-        handle[viewStatus] = false
-    }
-    fun downPicDay(date: String){
-        viewModelScope. launch {
-            if (!handle.getLiveData<Boolean>(viewStatus).value!!) {
-                downloadPicOfDayUseCase.downPicOfDay(date)
-                handle[viewStatus] = true
+    fun downPicDay(date: String) {
+        viewModelScope.launch {
+            val result = withContext(
+                viewModelScope
+                    .coroutineContext + Dispatchers.IO
+            ) {
+                try {
+                    val picDayCloud: PicDayCloud
+                    val body = BODY_ANSWER + date
+                    val bodyCloud = BodyCloud(body)
+                    val responseCloud = GetPicDay
+                        .retrofitPicDayService.searchPicDay(bodyCloud)
+
+                    if (responseCloud != null && responseCloud.success) {
+                        picDayCloud = responseCloud.data
+                        picDayDao.insert(picDayCloud.toPicDay())
+                        return@withContext true
+
+                    } else {
+                        messageError = "Null FALSE EMPTY"
+                        return@withContext false
+                    }
+
+                } catch (throwable: Throwable) {
+                    messageError = throwable.message.toString().ifEmpty { "ERROR THROW" }
+                    return@withContext false
+                }
             }
+            taskResultMutableLive.value = result
         }
     }
 }

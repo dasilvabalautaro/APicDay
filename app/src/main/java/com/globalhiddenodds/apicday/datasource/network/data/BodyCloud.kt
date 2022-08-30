@@ -1,3 +1,6 @@
 package com.globalhiddenodds.apicday.datasource.network.data
 
-data class BodyCloud(val url: String)
+import com.squareup.moshi.Json
+
+data class BodyCloud(
+    @field:Json(name = "url") val url: String)
