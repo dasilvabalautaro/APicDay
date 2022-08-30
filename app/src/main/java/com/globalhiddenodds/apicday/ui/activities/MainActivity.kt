@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            changeDate(Utils.formatDateNow()) // "2022-07-25"
+            changeDate(Utils.formatDateNow())
             PicDayApp()
         }
     }
@@ -103,6 +103,9 @@ fun AppNavHost(
         composable(AppScreens.Close.name) {
             android.os.Process.SIGNAL_KILL
             exitProcess(1)
+        }
+        composable(AppScreens.Settings.name) {
+
         }
     }
 }

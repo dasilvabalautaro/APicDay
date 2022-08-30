@@ -1,19 +1,24 @@
 package com.globalhiddenodds.apicday.ui.configuration
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CollectionsBookmark
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.PathNode
 
 enum class AppScreens(val icon: ImageVector) {
     Splash(
-        icon = Icons.Filled.Download
+        icon = Icons.Filled.CloudDownload
     ),
     PicDay(
-        icon = Icons.Filled.Photo
+        icon = Icons.Filled.CollectionsBookmark
     ),
     Close(
-        icon = Icons.Filled.Close
+        icon = Icons.Filled.Logout
+    ),
+    Settings(
+        icon = Icons.Filled.Settings
     );
 
     companion object {
@@ -22,6 +27,7 @@ enum class AppScreens(val icon: ImageVector) {
                 Splash.name -> Splash
                 PicDay.name -> PicDay
                 Close.name -> Close
+                Settings.name -> Settings
                 null -> Splash
                 else -> throw IllegalArgumentException("Route $route is not recognized.")
             }
