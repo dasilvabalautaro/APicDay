@@ -1,10 +1,8 @@
 <resources>
-    <string name="app_name">Astronomy Picture of the Day</string>
-    <string name="lbl_transform_to_64">Transform URL</string>
-    <string name="lbl_down_pic_day">Progress Download Picture Day</string>
-    <string name="lbl_down_failed">Download Picture Failed</string>
-    <string name="lbl_down_finished">Task Download Finished</string>
-    <string name="lbl_pic_of_day">Picture of Day</string>
-    <string name="lbl_unknown_error">Unknown error</string>
-    <string name="lbl_video_download">Video downloaded</string>
+    <string name="app_name">The Best Images</string>
+    <string name="lbl_select_date">Select Date</string>
+    <string name="tip_down_select">Select Date and Press Button</string>
+    <string name="lbl_fail_connect">Fail connection</string>
+    <string name="tip_high_resolution">Press for view in high resolution</string>
+    <string name="lbl_not_found_favorites">You don\'t have favorites</string>
 </resources>
